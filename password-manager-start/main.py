@@ -25,22 +25,53 @@ def pasword_gen():
     placer2.insert(0,nstr)
 
 # ---------------------------- SAVE PASSWORD ------------------------------- #
-
+import json
 def save_password():
     website_val = placer.get()
     email_val = placer1.get()
     pasword = placer2.get()
+    my_dict = {
+        website_val:{
+            "email":email_val,
+            "password":pasword
+        }
+    }
     if len(website_val)==0 or len(email_val)==0 or len(pasword)==0:
         messagebox.showinfo(title='Oops',message="Please Make sure that you have not left anything")
     else:
-        is_ok = messagebox.askokcancel(title=website_val,message=f'These are the Details are Entered\n {email_val}'
-                               f'\nPassword: {pasword}\n Is it OK for You')
-        if is_ok:
-            with open('Data.txt','a') as file:
-                file.write(f'{website_val} | {email_val} | {pasword} \n ')
-                placer.delete(0,END)
-                placer1.delete(0, END)
-                placer2.delete(0,END)
+        try:
+            with open("Data.json",'r') as file:
+                data = json.load(file)
+
+        except FileNotFoundError:
+            with open('Data.json','w') as file:
+                json.dump(my_dict, file, indent=4)
+        else:
+            data.update(my_dict)
+            with open('Data.json','w') as file:
+                json.dump(data, file, indent=4)
+        finally:
+            placer.delete(0, END)
+            placer1.delete(0, END)
+            placer2.delete(0, END)
+# ----------------------------Search of Password-----------------------#
+
+
+def search_password():
+    web_name = placer.get()
+    try:
+        with open('Data.json','r') as file:
+            data = json.load(file)
+    except FileNotFoundError:
+        messagebox.showinfo(title='Error',message="Data file does not exits")
+    else:
+        if web_name in data:
+                email = data[web_name]['email']
+                pasword = data[web_name]['password']
+                messagebox.showinfo(title='Result',message=f'Email: {email}\n password: {pasword}')
+        else:
+            messagebox.showinfo(title='Error',message="Data does not exits in file")
+        placer.delete(0, END)
 
 
 # ---------------------------- UI SETUP ------------------------------- #
@@ -58,10 +89,10 @@ canvas.grid(row=0,column=1)
 
 website = Label(text='Website',font=('Arail',12))
 website.grid(row=1,column=0)
-placer = Entry(width=35)
+placer = Entry(width=21)
 placer.focus()
 
-placer.grid(row=1,column=1, columnspan=2)
+placer.grid(row=1,column=1)
 email = Label(text='Email',font=('Arail',12))
 email.grid(row=2,column=0)
 placer1 = Entry(width=35)
@@ -77,4 +108,6 @@ btn.grid(row=3,column=2)
 btn1 = Button(text="Add",width=34, command=save_password)
 btn1.grid(row=4,column=1,columnspan=2)
 
+btn2 = Button(text="Search",command=search_password)
+btn2.grid(row=1,column=2)
 screen.mainloop()
